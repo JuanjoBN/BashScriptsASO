@@ -5,8 +5,6 @@ En este repositorio se encuentra almacenado todo el trabajo realizado en la asig
 Cada práctica tiene su correspondiente enunciado e informe donde se explica lo realizado.
 A continuación se explican los enunciados de los scripts realizados:
 
-Enunciados de los Scripts
-
 1:Escribir un script para mostrar solamente las líneas impares de un archivo de texto que se pasa como argumento al script.
 Añadidos: a) permitir mostrar líneas pares o impares según una opción; b) permitir un número de ficheros variable.
 
