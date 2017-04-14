@@ -1,0 +1,177 @@
+Francisco Montiel González. En esta Practica se adjunta tres pantallazos demostrando la resolución de tres apartados y el fichero /etc/fstab (Una Copia) en su estado final
+después de la realización de la Practica.
+
+
+PRACTICA 5.1
+
+Lo primero fue crearme dos discos duros nuevos y asociarlos a la máquina virtual como especificaba el guión de prácticas.
+Le di el nombre de sbd y sdc. De 128M cada uno.
+
+1 	-Creamos dos volumenes físicos (PV) de LVM usando:
+
+	pvcreate /dev/sdb
+	pvcreate /dev/sdc
+
+2 	-Creamos un grupo de Volumenes (VG) que incorpore los dos PVs del apartado anterior
+
+	vgcreate VG_ASO /dev/sdb /dev/sdc
+	
+	Usando vgdisplay podemos ver los diferentes grupos volumenes lógicos de la máquina.
+	
+3	-Creamos un volumen logico (VL) de 100M tomando el espacio de VG_ASO
+
+	lvcreate —size=100M VG_ASO
+	
+	Usando lvdisplay podemos ver los diferentes volumenes lógicos de la máquina.
+	
+4 	-Creamos un sistema de ficheros de tipo ext4 con la etiqueta MEDIA
+
+	mkfs construye un sistema de ficheros de Linux
+	
+	mkfs.ext4 -L MEDIA /dev/VG_ASO/lvol0 
+
+	La opción -L nos permite ponerle un nombre, a continuación le pasamos la ruta del dispositivo a formatear.
+	
+	-A continuación debemos montar los dispositivos con el programa mount.
+
+	mount /dev/VG_ASO/lvol0 /mnt
+	
+	-Haciendo: df /dev/VG_ASO/lvol0 podemos saber donde está montado el sistema de ficheros e informa de la utilización del espacio de disco en sistemas de ficheros
+	
+	-Copiamos recursivamente los directorios /bin y /usr/bin en /mnt
+	
+	cp -r /bin /mnt
+
+	mkdir /mnt/usr 
+
+	cp -r /usr/bin /mnt/usr
+	
+	No se pudo copiar todo por falta de espacio
+	
+	-Volvemos a montar el sistema de ficheros en modo solo lectura
+	
+	mount -o remount,ro /dev/VG_ASO/lvol0
+	umount /dev/VG_ASO/lvol0
+	
+	
+5	-Ampliar el sistema de ficheros Media en 40M
+	
+	lvextend /dev/VG_ASO/lvol0 --size=+40M
+	
+	-Ahora extendemos el propio sistema de ficheros.Para haccer esto tenmos que tener desmontado el sistema de ficheros, de ahí que lo desmontaramos en el apartado anterior.
+	
+	-Primero debemos ejeccutar ésta instrucción antes de ejecutar el resize2fs :
+	
+	e2fsck -f /dev/VG_ASO/lvol0
+
+	resize2fs /dev/VG_ASO/lvol0 140M
+	
+	-Y volvemos a montar el sistema:
+	
+	mount /dev/VG_ASO/lvol0 /mnt
+	
+6	-Creamos un nuevo sistema de ficheros del tipo ext4 llamado BACKUP de 80M. Primero debemos crear el volumen lógico.
+
+	lvcreate --size=80M VG_ASO
+
+	-Ahora lo creamos
+	
+	mkfs.ext4 -L BACKUP -b 2048 -N 3000 /dev/VG_ASO/lvol1
+	
+7	-Verificamos la integridad del sistema archivos BACKUP
+
+	fsck -f /dev/VG_ASO/lvol1
+
+8	-Creamos los directorios /var/media y /var/backup
+
+	mkdir /var/{media,backup}
+	
+	-Configuramos el sistema para que MEDIA y BACKUP se monten de forma automática en los directorios nombrados previamente, modificando el fichero /etc/fstab:
+	
+	gedit /etc/fstab y añadimos:
+	
+	/dev/VG_ASO/lvol0 /var/media ext4 defaults 0 0
+
+	/dev/VG_ASO/lvol1 /var/backup ext4 defaults 0 0
+	
+	
+	
+PRACTICA 5.2
+
+1	-Configurar el sistema de archivos «MEDIA» para que cada vez que el sistema se reinicie, se realice una comprobación de la integridad del sistema de archivos.
+
+	tune2fs -C 1 /dev/VG_ASO/lvol0
+	
+2	-Obtener todos los parámetros de configuración del sistema de archivos “MEDIA”.
+
+	tune2fs -l /dev/VG_ASO/lvol0
+	
+3	-Configurar los sistemas de archivos «MEDIA» y «BACKUP» para que cada cinco veces que se monte el sistema de archivos, al arrancar, se produzca una verificación de su integridad.
+	
+	tune2fs -c 5 /dev/VG_ASO/lvol0
+	tune2fs -c 5 /dev/VG_ASO/lvol1
+	
+4	-Mostrar el espacio disponible en cada uno de los sistemas de archivos que están montados actualmente.
+
+	df -h /dev/VG_ASO/lvol0 /dev/VG_ASO/lvol1
+	
+5	-Obtener el espacio consumido por los directorios /usr y /var.
+
+	du -shc /usr /var
+
+	
+PRACTICA 5.3
+
+
+1	-Activar el sistema de cuotas en los sistemas de archivos MEDIA y BACKUP.
+
+	-En el fichero /etc/fstab donde aparece defauls ponemos “defaults,usrquota,grpquota" tanto el media como el backup:
+		
+		/dev/VG_ASO/lvol0 /var/media ext4 defaults,usrquota,grpquota 0 0
+
+		/dev/VG_ASO/lvol1 /var/backup ext4 defaults,usrquota,grpquota 0 0
+
+	-Ahora remontamos todo:
+	
+	mount -o remount /var/media  
+	mount -o remount /var/backup
+
+	-Hacemos el Quotacheck:
+
+	quotacheck -mcug /var/media
+	quotacheck -mcug / var/backup
+
+	-Ahora cuando vayamos a /var/media y /var/backup veremos el aquota.group y el aquota.user.
+
+	-Activamos las cuotas:
+
+	quotaon /var/backup
+	quotaon /var/media
+
+
+2	-Establecer para el usuario prueba una cuota de espacio de 20 MiB y 200 archivos.
+
+	Hacemos edquota -u prueba
+	
+	Mirar Pantallazo adjunto
+
+
+		
+3 	-Establecer para el grupo de usuarios prueba una cuota de espacio de 50 MiB y 600 archivos.
+
+	Hacemos edquota -u prueba
+
+	Mirar Pantallazo adjunto
+	
+	
+4	-Obtener el porcentaje alcanzado para cada una de las cuotas establecidas.
+
+	repquota -a
+	
+5	-Configurar los periodos de gracia del sistema de cuotas.
+
+	edquota -t 
+
+	
+
+

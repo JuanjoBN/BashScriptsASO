@@ -1,0 +1,21 @@
+
+#
+# /etc/fstab
+# Created by anaconda on Mon Sep 26 08:45:30 2016
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk'
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+#
+/dev/mapper/vg_asovirtualfranmontiel-lv_root /                       ext4    defaults        0 0
+/dev/VG_ASO/lvol0	/var/media		                     ext4    defaults,usrquota,grpquota	0 0
+/dev/VG_ASO/lvol1	/var/backup				     ext4    defaults,usrquota,grpquota	0 0
+UUID=f3d88795-bba1-41e5-9590-880e60213b1c /boot                   ext4    defaults        1 2
+/dev/mapper/vg_asovirtualfranmontiel-lv_swap swap                    swap    defaults        0 0
+tmpfs                   /dev/shm                tmpfs   defaults        0 0
+devpts                  /dev/pts                devpts  gid=5,mode=620  0 0
+sysfs                   /sys                    sysfs   defaults        0 0
+proc                    /proc                   proc    defaults        0 0
+
+
+
+
